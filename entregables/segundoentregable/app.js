@@ -1,8 +1,8 @@
 const fs = require("fs").promises;
 
 class ProductManager {
-  constructor() {
-    this.productsFile = "entregables/segundoentregable/DB.json";
+  constructor(path) {
+    this.productsFile = path;
     this.products = [];
   }
 
@@ -10,29 +10,17 @@ class ProductManager {
   async uploadProducts() {
     try {
       const data = await fs.readFile(this.productsFile, "utf8");
-      return JSON.parse(data);
+      this.products = JSON.parse(data)
     } catch (error) {
       if (error.code === "ENOENT") {
-        return [];
+        this.products = []
       } else {
         throw error;
       }
     }
   }
 
-  //add
-  async addFile(product) {
-    try {
-      let products = await this.products();
-      products.push(product);
-      await fs.writeFile(this.productsFile, JSON.stringify(products, null, 2));
-      console.log("Producto agregado correctamente");
-    } catch (error) {
-      console.log("Error al agregar el producto", error);
-    }
-  }
-
-  addProduct (title, description, price, thumbnail, code, stock){
+  async addProduct (title, description, price, thumbnail, code, stock){
     if (!title && !description && !price && !thumbnail && !code && !stock){
         console.log("Debe ingresar todos los campos")
         return
@@ -42,7 +30,7 @@ class ProductManager {
         return
     }
 
-    const id = this.products++
+    const id = this.products.length > 0 ? Math.max(...this.products.map((p) => p.id)) + 1 : 1
     const product = {
         id,
         title,
@@ -53,13 +41,16 @@ class ProductManager {
         stock
     }
     this.products.push(product)
+    this.addFile()
+    console.log("Producto agregado correctamente")
   }
   //consult
   async consProduct() {
     try{
-        return await this.products()
+        await this.uploadProducts()
+        return this.products
     } catch(error){
-        console.log("Error al consultar producto")
+        console.log("Error al consultar producto", error)
         return []
     }
   }
@@ -68,7 +59,7 @@ class ProductManager {
     return this.products
   }
 
-  getProductsById(){
+  getProductsById(id){
     const product =  this.products.find((prod) => prod.id === id)
     if(!product){
         console.log("No se encontró el producto segun el ID indicado")
@@ -76,24 +67,40 @@ class ProductManager {
   }
 
   //mod
-  async modProduct(id, prudctMod) {
+  async modProduct(id, productMod) {
     const indexProd = this.products.findIndex((product) => product.id === id)
-
-    if(!indexProd){
+    if(indexProd === -1){
         console.error("No se encontro el producto por ID")
         return
     }
-
-    const dataExtra = ""
     try{
-        fs.appendFile('productsFile.json', dataExtra)
+        this.products[indexProd] = {...this.products[indexProd], ...productMod}
+        await this.addFile()
         console.log("Se ha agregado correctamente")
     } catch(error){
         console.log("Hubo un problema al actualizar", error)
     }
   }
 
-  //delete
-  async delProduct() {}
-
+  async addFile(){
+    try{
+        await fs.writeFile(this.productsFile, JSON.stringify(this.products, null, 2))
+        console.log("Productos agregados correctamente al archivo: ", this.productsFile)
+    } catch(error){
+        console.log("Error", error)
+    }
+  }
 }
+const productManager = new ProductManager('entregables/segundoentregable/DB.json')
+
+productManager.addProduct('Remera', '100% algodon', 100, 'remera.jpg', 1, 100)
+
+const allProducts = productManager.consProduct()
+console.log("Todos los productos: ", allProducts)
+
+const productById = productManager.getProductsById(1)
+console.log("el producto con ese Id: ", productById)
+
+productManager.modProduct(1, {price: 120})
+
+productManager.addFile()
