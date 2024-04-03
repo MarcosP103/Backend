@@ -14,7 +14,6 @@ class ProductManager {
       return;
     }
 
-    //verirficar si puedo usar addProduct de nuevo o debo cambiarle el nombre
     const addProduct = {
       id: this.addId++,
       title,
