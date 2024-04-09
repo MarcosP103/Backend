@@ -48,18 +48,14 @@ class ProductManager {
     console.log("Producto agregado correctamente");
   }
   //consult
-  async consProduct() {
+  async getProducts() {
     try {
       await this.uploadProducts();
       return this.products;
     } catch (error) {
-      console.log("Error al consultar producto", error);
+      console.log("Error al obtener los productos:", error);
       return [];
     }
-  }
-
-  getProducts() {
-    return this.products;
   }
 
   getProductsById(id) {
@@ -121,7 +117,7 @@ const productManager = new ProductManager("./DB.json");
 
 productManager.addProduct("Remera", "100% algodon", 100, "remera.jpg", 1, 100);
 
-const allProducts = productManager.consProduct();
+const allProducts = productManager.getProducts();
 console.log("Todos los productos: ", allProducts);
 
 const productById = productManager.getProductsById(1);
